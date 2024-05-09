@@ -17,6 +17,7 @@ type Defaultconf struct {
 	CNIVersion string `json:"cniVersion"`
 	Type       string `json:"type"`
 	DataDir    string `json:"dataDir"`
+	PodCidr    string `json:"podcidr"`
 }
 
 type SubnetConf struct {
@@ -55,15 +56,6 @@ func LoadSubnetConfig() (*SubnetConf, error) {
 	return conf, nil
 }
 
-func StoreSubnetConfig(conf *SubnetConf) error {
-	data, err := json.Marshal(conf)
-	if err != nil {
-		return err
-	}
-
-	return os.WriteFile(SubnetFilePath, data, 0644)
-}
-
 func LoadCNIConfig(stdin []byte) (*CNIConf, error) {
 	defaultconf, err := LoadDefaultConfig(stdin)
 	if err != nil {
@@ -75,4 +67,13 @@ func LoadCNIConfig(stdin []byte) (*CNIConf, error) {
 		return nil, err
 	}
 	return &CNIConf{Defaultconf: *defaultconf, SubnetConf: *subnetConf}, nil
+}
+
+func StoreSubnetConfig(conf *SubnetConf) error {
+	data, err := json.Marshal(conf)
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(SubnetFilePath, data, 0644)
 }

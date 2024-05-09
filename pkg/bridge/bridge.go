@@ -3,6 +3,8 @@ package bridge
 import (
 	"fmt"
 	"os/exec"
+
+	"k8s.io/klog/v2"
 )
 
 func CreateBridge() {
@@ -10,7 +12,7 @@ func CreateBridge() {
 
 	output, err := cmd.Output()
 	if err != nil {
-		fmt.Println("error: ", err)
+		klog.Error("[-] Fail to load default CNI config!")
 		return
 	}
 
