@@ -16,6 +16,13 @@ import (
  3. Other Utilizing IP address functions
 */
 
+/*
+	#cacluating ip address
+	ip netns exec $nsname ip link set $CNI_IFRAME up
+	ip netns exec $nsname ip addr add $ip/24 dev $CNI_IFNAME
+	ip netns exec $nsname ip route add default via $podcidr_gw dev $CNI_IFNAME
+*/
+
 type IPAM struct {
 	subnet  *net.IPNet
 	gateway net.IP

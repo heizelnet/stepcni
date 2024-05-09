@@ -7,6 +7,17 @@ import (
 	klog "k8s.io/klog/v2"
 )
 
+/*
+	/etc/cni/net.d/20-step-cni.conf
+	{
+		cniVersion : 0.4.0
+		name : stepcni
+		type : stepcni
+		DataDir : ~ pathname
+		podcidr : 10.240.0.0/24
+	}
+*/
+
 const (
 	SubnetFilePath = "/run/stepcni/subnet.json"
 	DefaultBridge  = "cni0"

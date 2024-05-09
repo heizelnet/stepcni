@@ -61,10 +61,14 @@ func cmdAdd(args *skel.CmdArgs) error {
 
 		6. CreateBridge
 
-		7. bridge.SetupVeth
+		7. SetupVeth
 	*/
 
 	return nil
+
+	/*
+		After created gateway, bridge, allocted ip, veth, return result entire conf data
+	*/
 }
 
 // TODO

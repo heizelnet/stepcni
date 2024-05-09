@@ -7,6 +7,15 @@ import (
 	"k8s.io/klog/v2"
 )
 
+/*
+	# create a new bridge if doesn't exist
+	brctl addbr cni0
+	brctl addif cni0 eth1
+	ip link set cni0 up
+*/
+
+const mtu = 1500
+
 func CreateBridge() {
 	cmd := exec.Command("ip", "addr")
 
