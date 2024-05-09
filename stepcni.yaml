@@ -44,7 +44,7 @@ data:
   cni-conf.json: |
     {
       "name": "stepcni",
-      "cniVersion": "1.0.0",
+      "cniVersion": "0.4.0",
       "type": "stepcni",
       "dataDir": "/var/lib/cni/networks"
     }

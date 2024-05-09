@@ -27,7 +27,7 @@ func main() {
 		Add:   cmdAdd,
 		Check: cmdCheck,
 		Del:   cmdDel,
-	}, version.All, "CNI stepcni v1.0.0")
+	}, version.All, "CNI stepcni v0.4.0")
 }
 
 func cmdAdd(args *skel.CmdArgs) error {
