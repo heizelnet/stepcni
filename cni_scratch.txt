@@ -1,0 +1,151 @@
+CNI being used in k8s
+
+1. APIServer -> communicate -> kubelet
+
+2. kubelet -> 'create pod network ns' -> POD
+
+3. kubelet -> CNI_COMMAND: ADD -> CNI
+
+4. Pod network namespace <---  Create eth0,AllocateIP,Define Route  ---> Host network namespace
+
+5. pod network namespace(eth0 in pod) <--- connect ---> host networknamespace(br in host)
+
+6. Container into --> env vars --> CNI
+* CNI_COMMAND=ADD
+* CNI_CONTAINERD=b784313...
+* CNI_NETNS=/proc/1234/ns/net
+* CNI_IFNAME=eth0
+
+7. CNI config --> stdin -->  CNI
+* cniVersion: "0.4.0"
+* "name": "my-cni"
+* "type": "my-cni"
+* "podcidr": "10.240.0.0/24"
+
+8. 
+Container into --- env vars
+			  |
+			CNI
+			  |
+CNI Config ------- stdin 
+
+CNI network configuration
+{
+	"cniVersion":"0.4.0",
+	"name":"my name"
+	"type":"demo" (CNI plugin binary name)
+	"ipam":{ ... },
+	"dns":{ ... },
+	...
+}
+CNI runtime information
+{
+	CNI_COMMAND = ADD, DELETE, CHECK, VERSION
+	CNI_CONTAINERD = <container id>
+	CNI_NETNS = /proc/pid/ns/net
+	CNI_IFNAME = eth0
+	CNI_PATH = /opt/cni/bin
+	CNI_ARGS
+}
+
+CNI result
+{
+	"cniVersion":0.4.0",
+	"interfaces":[
+		{ ... },
+	],
+	"ips":[
+		{ ... },
+	],
+	"routes": [
+		{ ... },
+	],
+	"dns": { ... }
+}
+
+9. pod1(eth0)---|
+   pod2(eth0)---|--bridge(veth1, veth2, veth3) --- host(eth0)
+   pod3(eth0)---|
+
+10. cat /etc/cni/net.d/10-my-cni.conf
+{
+	cniVersion : 0.4.0
+	name : my-cni
+	type : my-cni
+	podcidr : 10.240.0.0/24
+}
+
+11. cat /opt/cni/bin/my-cni
+# Read Stdin
+conf = $(cat /dev/stdin)
+
+# Retrieve vars
+podcidr=$(cat $conf | jq -r ".podcidr")
+bridge=$(echo $conf | jq -r ".bridge")
+gateway=$(echo $conf | jq -r ".gateway")
+podcidr_gw=$(echo $podcidr | sed "s:0/24:1:g")  # 여기까지가 4번
+
+# assign 10.240.0.1/24 to cni0
+ip addr add "${podcidr_gw}/24" dev cni0 # 여기까지가 6,7번
+
+# choose for ns
+nsname=$CNI_CONTAINERID
+
+case $CNI_COMMAND in
+ADD )
+	#Create pod's network namespace	
+	mkdir -p /var/run/netns
+	ln -sfT $CNI_NETNS /var/run/netns/$nsname 
+
+	# create a new bridge if doesn't exist
+	brctl addbr cni0 
+	brctl addif cni0 eth1
+	ip link set cni0 up
+
+	# veth up
+	host_ifname="veth$n" # n=1,2,3,...
+	ip link add $CNI_IFNAME type veth peer name $host_ifname
+	ip link set $host_ifname up
+
+	ip link set $host_ifname master cni0 # connect veth1 to bridge 
+	ip link set $CNI_IFNAME netns $nsname #mov eth0 to pod ns
+
+	#cacluating ip address
+	ip netns exec $nsname ip link set $CNI_IFRAME up
+	ip netns exec $nsname ip addr add $ip/24 dev $CNI_IFNAME
+	ip netns exec $nsname ip route add default via $podcidr_gw dev $CNI_IFNAME
+/*
+	if [ -f /tmp/last_allocated_ip ]; then
+		n=`cat /tmp/last_allocated_ip`
+	else
+		n=1
+	if
+	ip=$(echo $podcidr | sed "s:0/24:$(($n+1)):g")
+	echo $(($n+1)) > /tmp/last_allocated_ip 
+*/
+DEL )
+	# Delete pod network, Cleanup
+	;; 
+GET )
+	# Get Container info
+	;;
+VERSION )
+	;; Print plugin info
+esac
+
+12. add iptables rules
+iptables -A FORWARD -s 10.240.0.0/16 -j ACCEPT
+iptables -A FORWARD -d 10.240.0.0/16 -j ACCEPT
+
+
+# 해당 부분 이후로는 Node간 통신에 필요한 작업
+13.
+#node 1 
+ip route add 10.240.1.0/24 via 10.10.10.11 dev (enp0s9) #for route to other node network communication
+
+#node2
+ip route add 10.240.0.0/24 via 10.10.10.10 dev (enp0s9) #for route to other node network communication
+
+14. ping 해결을 위한 IP masquarading
+
+iptables -t nat -A POSTROUTING -s 10.240.0.0/24 ! -o cni0 -j MASQUARADE

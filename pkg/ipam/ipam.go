@@ -1,5 +1,10 @@
 package ipam
 
+import (
+	"fmt"
+	"os/exec"
+)
+
 /*
  1. Allocate IP
 
@@ -7,9 +12,25 @@ package ipam
 */
 
 func AllocateIP() {
+	cmd := exec.Command("ip", "addr")
 
+	output, err := cmd.Output()
+	if err != nil {
+		fmt.Println("error: ", err)
+		return
+	}
+
+	fmt.Println(output)
 }
 
 func GetSubnetFromFile() {
+	cmd := exec.Command("ip", "addr")
 
+	output, err := cmd.Output()
+	if err != nil {
+		fmt.Println("error: ", err)
+		return
+	}
+
+	fmt.Println(output)
 }
