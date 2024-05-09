@@ -68,6 +68,22 @@ func cmdAdd(args *skel.CmdArgs) error {
 
 	/*
 		After created gateway, bridge, allocted ip, veth, return result entire conf data
+
+		ex)
+			CNI result
+			{
+				"cniVersion":0.4.0",
+				"interfaces":[
+					{ ... },
+				],
+				"ips":[
+					{ ... },
+				],
+				"routes": [
+					{ ... },
+				],
+				"dns": { ... }
+			}
 	*/
 }
 

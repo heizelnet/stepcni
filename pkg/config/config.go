@@ -44,6 +44,11 @@ type CNIConf struct {
 func LoadDefaultConfig(stdin []byte) (*Defaultconf, error) {
 	conf := Defaultconf{}
 
+	/*
+		for debugging, print entire data
+	*/
+	klog.Infof("%s", stdin)
+
 	if err := json.Unmarshal(stdin, &conf); err != nil {
 		klog.Error("[-] Fail to load default CNI config!")
 		return nil, err
