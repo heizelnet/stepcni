@@ -5,11 +5,14 @@ package main
 	1. Add detail error handling with using PluginMainFuncsWithError..
 */
 import (
+	"fmt"
 	"runtime"
 
 	"github.com/containernetworking/cni/pkg/skel"
 	"github.com/containernetworking/cni/pkg/version"
+	"github.com/heizelnet/stepcni/pkg/bridge"
 	"github.com/heizelnet/stepcni/pkg/config"
+	"github.com/heizelnet/stepcni/pkg/veth"
 	klog "k8s.io/klog/v2"
 )
 
@@ -47,7 +50,18 @@ func cmdAdd(args *skel.CmdArgs) error {
 		return err
 	}
 
-	klog.Infof("[+] DataDir Path : %s", conf.DataDir)
+	err = bridge.CreateBridge(conf.Subnet, conf.Bridge)
+	if err != nil {
+		klog.Error("[-] Fail to create bridge!")
+		return err
+	}
+
+	err = veth.SetupVeth(args.Netns, conf.Bridge, args.IfName, args.ContainerID)
+	if err != nil {
+		klog.Error("[-] Fail to create bridge!")
+		return err
+	}
+
 	/*
 		(Done) 1. LoadCNIConfig
 
@@ -63,8 +77,6 @@ func cmdAdd(args *skel.CmdArgs) error {
 
 		7. SetupVeth
 	*/
-
-	return nil
 
 	/*
 		After created gateway, bridge, allocted ip, veth, return result entire conf data
@@ -85,6 +97,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 				"dns": { ... }
 			}
 	*/
+	return nil
 }
 
 // TODO
@@ -109,7 +122,7 @@ func cmdDel(args *skel.CmdArgs) error {
 		return err
 	}
 
-	klog.Infof("[+] DataDir Path : %s", conf.DataDir)
+	fmt.Printf("[+] bridge : %s \n", conf.Bridge)
 	/*
 		1. LoadCNIConfig
 

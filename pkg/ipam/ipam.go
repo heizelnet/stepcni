@@ -5,6 +5,7 @@ import (
 	"net"
 	"os/exec"
 
+	"github.com/heizelnet/stepcni/pkg/config"
 	"k8s.io/klog/v2"
 )
 
@@ -18,7 +19,7 @@ import (
 
 /*
 	#cacluating ip address
-	ip netns exec $nsname ip link set $CNI_IFRAME up
+	ip netns exec $nsname ip link set $CNI_IFNAME up
 	ip netns exec $nsname ip addr add $ip/24 dev $CNI_IFNAME
 	ip netns exec $nsname ip route add default via $podcidr_gw dev $CNI_IFNAME
 */
@@ -26,6 +27,45 @@ import (
 type IPAM struct {
 	subnet  *net.IPNet
 	gateway net.IP
+}
+
+func SetIPAM(conf *config.CNIConf, containerID string, ifname string) (*IPAM, error) {
+
+	//ip netns exec $nsname ip link set $CNI_IFNAME up
+	cmd := exec.Command("ip", "netns", "exec", containerID, "ip", "link", "set", ifname, "up")
+	_, err := cmd.Output()
+	if err != nil {
+		klog.Error("[-] Fail to load default CNI config!")
+		return nil, err
+	}
+
+	//ip netns exec $nsname ip addr add $ip/24 dev $CNI_IFNAME
+	cmd = exec.Command("ip", "netns", "exec", containerID, "ip", "addr", "add", conf.Subnet, "dev", ifname)
+	_, err = cmd.Output()
+	if err != nil {
+		klog.Error("[-] Fail to load default CNI config!")
+		return nil, err
+	}
+
+	//ip netns exec $nsname ip route add default via $podcidr_gw dev $CNI_IFNAME
+	cmd = exec.Command("ip", "netns", "exec", containerID, "ip", "route", "add", "default", "via", conf.PodCidr, "dev", ifname)
+	_, err = cmd.Output()
+	if err != nil {
+		klog.Error("[-] Fail to load default CNI config!")
+		return nil, err
+	}
+
+	_, ipnet, err := net.ParseCIDR(conf.Subnet)
+	if err != nil {
+		return nil, err
+	}
+
+	im := &IPAM{
+		subnet: ipnet,
+	}
+
+	im.gateway, err = im.Ne
+
 }
 
 func AllocateIP() {

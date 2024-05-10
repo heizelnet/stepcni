@@ -16,14 +16,39 @@ import (
 
 const mtu = 1500
 
-func CreateBridge() {
-	cmd := exec.Command("ip", "addr")
+func CreateBridge(gateway string, brname string) error {
 
-	output, err := cmd.Output()
+	//check already has cni0 interface
+	cmd := exec.Command("ip", "link", "show", brname)
+	_, err := cmd.Output()
 	if err != nil {
-		klog.Error("[-] Fail to load default CNI config!")
-		return
+		klog.Error("[-] Already has cni0!")
+		return err
 	}
 
-	fmt.Println(output)
+	//add bridge
+	cmd = exec.Command("ip", "link", "add", "name", brname, "type", "bridge")
+	_, err = cmd.Output()
+	if err != nil {
+		klog.Errorf("[-] Fail to add bridge %s!", brname)
+		return err
+	}
+
+	//interface setup
+	cmd = exec.Command("ip", "link", brname, "up")
+	_, err = cmd.Output()
+	if err != nil {
+		klog.Error("[-] Fail to bridge")
+		return err
+	}
+
+	//add address
+	cmd = exec.Command("ip", "addr", "add", fmt.Sprintf("%s/24", gateway), "dev", brname)
+	_, err = cmd.Output()
+	if err != nil {
+		klog.Error("[-] Fail to add interface to bridge!")
+		return err
+	}
+
+	return nil
 }

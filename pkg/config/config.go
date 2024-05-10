@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 
 	klog "k8s.io/klog/v2"
@@ -19,6 +20,7 @@ import (
 */
 
 const (
+	cniConfigPath  = "/etc/cni/net.d/20-stepcni.conf"
 	SubnetFilePath = "/run/stepcni/subnet.json"
 	DefaultBridge  = "cni0"
 )
@@ -27,7 +29,6 @@ type Defaultconf struct {
 	Name       string `json:"name"`
 	CNIVersion string `json:"cniVersion"`
 	Type       string `json:"type"`
-	DataDir    string `json:"dataDir"`
 	PodCidr    string `json:"podcidr"`
 }
 
@@ -92,4 +93,22 @@ func StoreSubnetConfig(conf *SubnetConf) error {
 	}
 
 	return os.WriteFile(SubnetFilePath, data, 0644)
+}
+
+func StoreCNIPluginConfig() error {
+	fd, err := os.OpenFile(cniConfigPath,
+		os.O_CREATE|os.O_RDWR|os.O_TRUNC, os.ModeAppend|os.ModePerm)
+	if err != nil {
+		klog.Errorf("[-] Open CNI config file error")
+		return err
+	}
+
+	defer fd.Close()
+
+	if _, err = fd.Write([]byte(fmt.Sprintf(cniConfTemplate, node.Spec.PodCIDR))); err != nil {
+		klog.Errorf("[-]  Write CNI config file error")
+		return err
+	}
+
+	return nil
 }

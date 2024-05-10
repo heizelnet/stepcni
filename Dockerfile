@@ -6,8 +6,8 @@ WORKDIR /workspace
 COPY ./ ./
 
 # Build
-# CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -mod=vendor -o bin/mycnid cmd/mycnid/main.go && \
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -mod=vendor -o bin/mycni controller/main.go
+# CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -mod=vendor -o bin/stepcnid controller/stepcnid/main.go && \
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -mod=vendor -o bin/stepcni controller/stepcni/main.go
 
 FROM alpine
 RUN apk update && apk add --no-cache iptables
