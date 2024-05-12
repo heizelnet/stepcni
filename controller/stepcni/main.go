@@ -12,7 +12,6 @@ import (
 	"github.com/containernetworking/cni/pkg/version"
 	"github.com/heizelnet/stepcni/pkg/bridge"
 	"github.com/heizelnet/stepcni/pkg/config"
-	"github.com/heizelnet/stepcni/pkg/veth"
 	klog "k8s.io/klog/v2"
 )
 
@@ -56,7 +55,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 		return err
 	}
 
-	err = veth.SetupVeth(args.Netns, conf.Bridge, args.IfName, args.ContainerID)
+	err = bridge.SetupVeth(args.Netns, conf.Bridge, args.IfName, args.ContainerID)
 	if err != nil {
 		klog.Error("[-] Fail to create bridge!")
 		return err

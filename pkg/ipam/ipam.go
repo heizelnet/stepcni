@@ -5,7 +5,8 @@ import (
 	"net"
 	"os/exec"
 
-	"github.com/heizelnet/stepcni/pkg/config"
+	"github.com/heizelnet/stepcni/pkg/ipam/datastore"
+
 	"k8s.io/klog/v2"
 )
 
@@ -25,10 +26,23 @@ import (
 */
 
 type IPAM struct {
-	subnet  *net.IPNet
-	gateway net.IP
+	subnet    *net.IPNet
+	gateway   net.IP
+	datastore *datastore.DataStore
 }
 
+func NewIPAM() (*IPAM, error) {
+
+	return nil, nil
+}
+
+func (ipam *IPAM) AllocateIP() (net.IP, error) {
+	ipam.datastore.
+
+	return nil, nil
+}
+
+/*
 func SetIPAM(conf *config.CNIConf, containerID string, ifname string) (*IPAM, error) {
 
 	//ip netns exec $nsname ip link set $CNI_IFNAME up
@@ -67,6 +81,7 @@ func SetIPAM(conf *config.CNIConf, containerID string, ifname string) (*IPAM, er
 	im.gateway, err = im.Ne
 
 }
+*/
 
 func AllocateIP() {
 	cmd := exec.Command("ip", "addr")
